@@ -9,6 +9,14 @@ public:
     {
     }
 
+    ~HTMLElement()
+    {
+        for (HTMLElement *child : m_childrens)
+        {
+            delete child;
+        }
+    }
+
     std::string GetTagName() const
     {
         return m_tagName;
@@ -61,11 +69,32 @@ public:
         }
     }
 
+    float GetClientWidth() const 
+    {
+        return m_clientWidth;
+    }
+
+    void SetClientWidth(float clientWidth)
+    {
+        m_clientWidth = clientWidth;
+    }
+
+    float GetClientHeight() const
+    {
+        return m_clientHeight;
+    }
+
+    void SetClientHeight(float clientHeight)
+    {
+        m_clientHeight = clientHeight;
+    }
+
 private:
     HTMLElement *m_parent;
     std::vector<HTMLElement *> m_childrens;
     std::string m_tagName;
     std::string m_data;
+    float m_clientWidth, m_clientHeight;
 };
 
 class HTMLDocument
