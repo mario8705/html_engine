@@ -36,7 +36,7 @@ void CalcElementSize(HTMLElement *element, Rectangle *size)
     if (!data.empty())
     {
         // Assuming 14px base font
-        size->bottom += 14;
+        size->bottom += (element->GetTagName() == "h1" ? 28 : 14);
     }
 
     element->SetClientWidth(size->right - size->left);
@@ -53,7 +53,7 @@ static void RenderElement(cairo_t *cr, HTMLElement *element, int baseHeight)
 {
     cairo_select_font_face (cr, "Sans", CAIRO_FONT_SLANT_NORMAL,
                                CAIRO_FONT_WEIGHT_BOLD);
-    cairo_set_font_size (cr, 14.0);
+    cairo_set_font_size (cr, (element->GetTagName() == "h1" ? 28 : 14));
 
     cairo_text_extents_t extents;
     cairo_text_extents(cr, element->GetData().c_str(), &extents);
