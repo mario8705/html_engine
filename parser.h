@@ -144,12 +144,15 @@ static bool is_close_comment(buf_it *it)
 struct HTMLToken
 {
     int type;
+    int autoclose;
     char data[128];
     char data2[128];
 
     HTMLToken(int type)
         : type(type)
     {
+        data[0] = '\0';
+        data2[0] = '\0';
     }
 };
 
@@ -201,6 +204,7 @@ static void parse(buf_it *it, std::vector<HTMLToken> &tokens)
 
             HTMLToken tok(close_tag ? HT_CloseTag : HT_OpenTag);
             parse_ident(it, tok.data);
+            tok.autoclose = 0;
 
             tokens.push_back(tok);
 
@@ -209,6 +213,13 @@ static void parse(buf_it *it, std::vector<HTMLToken> &tokens)
                 trim_buf(it);
                 ident_buf[0] = '\0';
                 data_buf[0] = '\0';
+
+                if (*it->start == '/')
+                {
+                    ++it->start;
+
+                    tokens.push_back(HTMLToken(HT_CloseTag));
+                }
 
                 if (*it->start == '>')
                 {

@@ -19,6 +19,8 @@ struct Rectangle
     float bottom;
 };
 
+cairo_surface_t *simage;
+
 void CalcElementSize(HTMLElement *element, Rectangle *size)
 {
     auto childs = element->GetChildrens();
@@ -29,6 +31,12 @@ void CalcElementSize(HTMLElement *element, Rectangle *size)
     {
         size->right = parent->GetClientWidth();
         // size->bottom = parent->GetClientHeight();
+    }
+
+    // TODO lol loading the image here xD
+    if (element->GetTagName() == "img")
+    {
+        simage = cairo_image_surface_create_from_png(element->GetAttribute("src").c_str());
     }
 
     // Assuming display=block here
@@ -45,6 +53,12 @@ void CalcElementSize(HTMLElement *element, Rectangle *size)
     {
         // Assuming 14px base font
         size->bottom += (element->GetTagName() == "h1" ? 28 : 14);
+    }
+
+    if (element->GetTagName() == "img")
+    {
+        size->right = cairo_image_surface_get_width(simage);
+        size->bottom = cairo_image_surface_get_width(simage);
     }
 
     element->SetClientWidth(size->right - size->left);
@@ -70,6 +84,12 @@ static void RenderElement(cairo_t *cr, HTMLElement *element, int baseHeight)
     printf("Requested text alignment: %s\n", align.c_str());
 
     float xText = 0.0f;
+
+    if (element->GetTagName() == "img")
+    {
+        cairo_set_source_surface(cr, simage, 0, baseHeight);
+        cairo_paint(cr);
+    }
 
     if (align == "center")
     {
