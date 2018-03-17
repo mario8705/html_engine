@@ -111,11 +111,11 @@ static void assemble_dom(HTMLElement *parent, HTMLTokenIterator start, HTMLToken
     }
 }
 
-static void create_dom(const std::vector<HTMLToken> &tokens)
+static HTMLElement *create_dom(const std::vector<HTMLToken> &tokens)
 {
-    HTMLElement rootElement("html");
+    HTMLElement *rootElement = new HTMLElement("html");
 
-    assemble_dom(&rootElement, tokens.begin(), tokens.end());
+    assemble_dom(rootElement, tokens.begin(), tokens.end());
 
-    rootElement.PrintTree();
+    return rootElement;
 }
