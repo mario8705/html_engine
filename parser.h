@@ -139,17 +139,39 @@ static bool is_close_comment(buf_it *it)
 #define HT_OpenTag 1
 #define HT_CloseTag 2
 #define HT_Data 3
+#define HT_Attribute 4
 
 struct HTMLToken
 {
     int type;
     char data[128];
+    char data2[128];
 
     HTMLToken(int type)
         : type(type)
     {
     }
 };
+
+static char *parse_string(buf_it *it, char *buf)
+{
+    char *pbuf = buf;
+
+    while (it->start != it->end)
+    {
+        if (*it->start == '"')
+        {
+            ++it->start;
+            break;
+        }
+
+        *buf++ = *it->start;
+        ++it->start;
+    }
+
+    *buf = '\0';
+    return pbuf;
+}
 
 static void parse(buf_it *it, std::vector<HTMLToken> &tokens)
 {
@@ -182,12 +204,44 @@ static void parse(buf_it *it, std::vector<HTMLToken> &tokens)
 
             tokens.push_back(tok);
 
-            while (it->start != it->end && *it->start != '>')
+            while (it->start != it->end)
             {
-                ++it->start;
-            }
+                trim_buf(it);
+                ident_buf[0] = '\0';
+                data_buf[0] = '\0';
 
-            ++it->start;
+                if (*it->start == '>')
+                {
+                    ++it->start;
+                    break;
+                }
+
+                parse_ident(it, ident_buf);
+
+                if (*it->start == '=')
+                {
+                    ++it->start;
+                    trim_buf(it);
+
+                    if (*it->start == '"')
+                    {
+                        ++it->start;
+
+                        parse_string(it, data_buf);
+                    }
+                    else
+                    {
+                        // TODO use a better function
+                        parse_ident(it, data_buf);
+                    }
+                }
+
+                HTMLToken attrTok(HT_Attribute);
+                strcpy(attrTok.data, ident_buf);
+                strcpy(attrTok.data2, data_buf);
+
+                tokens.push_back(attrTok);                
+            }
         }
 
         pdata = data_buf;

@@ -7,6 +7,7 @@
 #include "parser.h"
 #include "dom.h"
 #include "window.h"
+#include "color.h"
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 
@@ -22,6 +23,13 @@ void CalcElementSize(HTMLElement *element, Rectangle *size)
 {
     auto childs = element->GetChildrens();
     std::string data = element->GetData();
+    HTMLElement *parent = element->GetParent();
+
+    if (parent)
+    {
+        size->right = parent->GetClientWidth();
+        // size->bottom = parent->GetClientHeight();
+    }
 
     // Assuming display=block here
     for (HTMLElement *childElement : childs)
@@ -58,9 +66,29 @@ static void RenderElement(cairo_t *cr, HTMLElement *element, int baseHeight)
     cairo_text_extents_t extents;
     cairo_text_extents(cr, element->GetData().c_str(), &extents);
 
-    cairo_move_to(cr, 0, extents.height + baseHeight);
+    std::string align = element->GetAttribute("align", "left");
+    printf("Requested text alignment: %s\n", align.c_str());
 
-    cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
+    float xText = 0.0f;
+
+    if (align == "center")
+    {
+        xText = (element->GetClientWidth() - extents.width) / 2;
+    }
+    else if (align == "right")
+    {
+        xText = element->GetClientWidth() - extents.width;
+    }
+
+    std::string color = element->GetAttribute("color", "black");
+    printf("Setting color to %s\n", color.c_str());
+
+    color_cairo_set_source(cr, g_colorTranslationMap[color]);
+
+    xText = MAX(xText, 0); // TODO check firefox or chrome on this
+
+    cairo_move_to(cr, xText, extents.height + baseHeight);
+
     cairo_show_text(cr, element->GetData().c_str());
 
     for (HTMLElement *child : element->GetChildrens())
@@ -100,6 +128,9 @@ static void parse_and_run(const char *path)
     cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
     cairo_rectangle(cr, 0, 0, 1280, 720);
     cairo_fill(cr);
+
+    rootElement->SetClientWidth(1280);
+    // height is automatic
 
     CalcLayout(rootElement, { 0, 0, 1280, 720 });
     RenderElement(cr, rootElement, 0);
