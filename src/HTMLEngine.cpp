@@ -3,6 +3,7 @@
 #include "MainWindow.h"
 #include "HTMLElement.h"
 #include "Stylesheet.h"
+#include "TextElement.h"
 
 #include <map>
 
@@ -12,7 +13,7 @@ struct LayoutInfo
     float w, h;
 };
 
-std::map<HTMLElement *, LayoutInfo> m_layoutCache;
+std::map<ADOMNode *, LayoutInfo> m_layoutCache;
 
 void CalcLayout(HTMLElement *element)
 {
@@ -28,13 +29,14 @@ void CalcLayout(HTMLElement *element)
 
     float yOffset = 0;
 
-    for (HTMLElement *child : element->GetChildrens())
+    for (ADOMNode *child : element->GetChildrens())
     {
         LayoutInfo &childLayoutInfo = m_layoutCache[child];
 
         childLayoutInfo.x = layoutInfo.x;
         childLayoutInfo.y = layoutInfo.y + yOffset;
         childLayoutInfo.w = layoutInfo.w;
+        /// TODO Move getstylesheet into adomnode
         childLayoutInfo.h = element->GetStylesheet()->GetFontSize();
 
         yOffset += childLayoutInfo.h;
@@ -53,42 +55,51 @@ void PaintBackground(cairo_t *cr, const Stylesheet *stylesheet, const LayoutInfo
     }
 }
 
-void RenderElement(cairo_t *cr, HTMLElement *element)
+void RenderElement(cairo_t *cr, ADOMNode *element)
 {
     const LayoutInfo &layoutInfo = m_layoutCache[element];
-    const Stylesheet *stylesheet = element->GetStylesheet();
+    // const Stylesheet *stylesheet = element->GetStylesheet();
 
-    PaintBackground(cr, stylesheet, layoutInfo);
+    // PaintBackground(cr, stylesheet, layoutInfo);
 
     cairo_select_font_face(cr, "Sans", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
-    cairo_set_font_size(cr, stylesheet->GetFontSize());
+    // cairo_set_font_size(cr, stylesheet->GetFontSize());
 
-    cairo_text_extents_t extents;
-    cairo_text_extents(cr, element->GetData().c_str(), &extents);
-
-    float xText = 0.0f;
-
-    switch (stylesheet->GetTextAlignment())
+    if (element->GetNodeType() == ADOMNode::TextNode)
     {
-        case Stylesheet::TextAlignment::Center:
-            xText = (layoutInfo.w - extents.width) / 2;            
-            break;
+        const TextElement *textElement = reinterpret_cast<const TextElement *>(element);
 
-        case Stylesheet::TextAlignment::Right:
-            xText = layoutInfo.w - extents.width;
-            break;
-        
-        default:
-            break;
+        cairo_text_extents_t extents;
+        cairo_text_extents(cr, textElement->GetData().c_str(), &extents);
+
+        float xText = 0.0f;
+
+        /*switch (stylesheet->GetTextAlignment())
+        {
+            case Stylesheet::TextAlignment::Center:
+                xText = (layoutInfo.w - extents.width) / 2;            
+                break;
+
+            case Stylesheet::TextAlignment::Right:
+                xText = layoutInfo.w - extents.width;
+                break;
+            
+            default:
+                break;
+        }*/
+
+        // color_cairo_set_source(cr, stylesheet->GetTextColor());
+        cairo_move_to(cr, layoutInfo.x + xText, layoutInfo.y + extents.height);
+        cairo_show_text(cr, textElement->GetData().c_str());
     }
-
-    color_cairo_set_source(cr, stylesheet->GetTextColor());
-    cairo_move_to(cr, layoutInfo.x + xText, layoutInfo.y + extents.height);
-    cairo_show_text(cr, element->GetData().c_str());
-
-    for (HTMLElement *child : element->GetChildrens())
+    else if (element->GetNodeType() == ADOMNode::ElementNode)
     {
-        RenderElement(cr, child);
+        const HTMLElement *elementNode = reinterpret_cast<const HTMLElement *>(element);
+    
+        for (ADOMNode *child : elementNode->GetChildrens())
+        {
+            RenderElement(cr, child);
+        }
     }
 }
 

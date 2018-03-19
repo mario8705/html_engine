@@ -1,11 +1,10 @@
 #pragma once
+#include "DOMNode.h"
 #include <string>
 #include <unordered_map>
 #include <vector>
 
-class Stylesheet;
-
-class HTMLElement
+class HTMLElement : public ADOMNode
 {
 public:
     HTMLElement(const std::string &tagName, HTMLElement *parent = nullptr);
@@ -18,14 +17,8 @@ public:
     std::string GetAttribute(std::string name, std::string defaultValue) const;
     void SetAttribute(std::string name, std::string value);
 
-    HTMLElement *GetParent() const;
-
-    void AppendChildren(HTMLElement *child);
-    std::vector<HTMLElement *> GetChildrens() const;
-
-    // Deprecated stuff
-    inline std::string GetData() const { return m_data; }
-    inline void SetData(std::string data) { m_data = data; }
+    void AppendChildren(ADOMNode *child);
+    std::vector<ADOMNode *> GetChildrens() const;
 
     inline float GetClientWidth() const { return m_clientWidth; }
     inline float GetClientHeight() const { return m_clientHeight; }
@@ -37,12 +30,9 @@ public:
     void DumpTree(int ident = 1) const;
 
 private:
-    std::string m_data;
     float m_clientWidth, m_clientHeight;
 
     std::string m_tagName;
-    Stylesheet *m_stylesheet;
     std::unordered_map<std::string, std::string> m_attributes;
-    HTMLElement *m_parent;
-    std::vector<HTMLElement *> m_childrens;
+    std::vector<ADOMNode *> m_childrens;
 };

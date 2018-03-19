@@ -1,27 +1,24 @@
 #include "HTMLElement.h"
 #include <algorithm>
 #include "Stylesheet.h"
+#include "TextElement.h"
 
 using namespace std;
 
 HTMLElement::HTMLElement(const string &tagName, HTMLElement *parent)
-    : m_tagName(tagName)
+    : ADOMNode(ADOMNode::ElementNode, parent), m_tagName(tagName)
 {
-    m_parent = parent;
-
-    if (parent)
+    if (m_parent)
     {
-        parent->AppendChildren(this);
+        m_parent->AppendChildren(this);
     }
 
-    m_stylesheet = new Stylesheet(this);
+    m_stylesheet->LoadUserAgentStyles();
 }
 
 HTMLElement::~HTMLElement()
 {
-    delete m_stylesheet;
-
-    for (HTMLElement *child : m_childrens)
+    for (const ADOMNode *child : m_childrens)
     {
         delete child;
     }
@@ -57,19 +54,13 @@ void HTMLElement::SetAttribute(string name, string value)
     m_attributes[name] = value;
 }
 
-HTMLElement *HTMLElement::GetParent() const
+void HTMLElement::AppendChildren(ADOMNode *child)
 {
-    return m_parent;
-}
-
-void HTMLElement::AppendChildren(HTMLElement *child)
-{
-    printf("Parent: %s\n", m_tagName.c_str());
     m_childrens.push_back(child);
     child->m_parent = this;
 }
 
-vector<HTMLElement *> HTMLElement::GetChildrens() const
+vector<ADOMNode *> HTMLElement::GetChildrens() const
 {
     return m_childrens;
 }
@@ -77,14 +68,23 @@ vector<HTMLElement *> HTMLElement::GetChildrens() const
 void HTMLElement::DumpTree(int ident) const
 {
     printf("%s\n", m_tagName.c_str());
+    const HTMLElement *element;
+    const TextElement *textNode;
 
-    for (const HTMLElement *child : m_childrens)
+    for (const ADOMNode *child : m_childrens)
     {
         for (int i = 0; i < ident; i++)
         {
             printf("  ");
         }
 
-        child->DumpTree(ident + 1);
+        if ((element = child->AsElementNode()) != nullptr)
+        {
+            element->DumpTree(ident + 1);
+        }
+        else if ((textNode = child->AsTextNode()) != nullptr)
+        {
+            printf("Text: %s\n", textNode->GetData().c_str());
+        }
     }
 }

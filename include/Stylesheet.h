@@ -1,7 +1,7 @@
 #pragma once
 #include "color.h"
 
-class HTMLElement;
+class ADOMNode;
 
 class Stylesheet
 {
@@ -21,7 +21,9 @@ public:
         Justify // No supported yet
     };
 
-    explicit Stylesheet(HTMLElement *element);
+    explicit Stylesheet(ADOMNode *element);
+
+    void LoadUserAgentStyles();
 
     void SetBackgroundColor(color_t color) { m_backgroundColor = color; }
     color_t GetBackgroundColor() const { return m_backgroundColor; }
@@ -33,10 +35,10 @@ public:
     TextAlignment GetTextAlignment() const;
     float GetFontSize() const;
 
-    HTMLElement *GetParent() const;
+    ADOMNode *GetParent() const;
 
 private:
-    HTMLElement *m_parent;
+    ADOMNode *m_parent;
 
     float m_fontSize;
     BackgroundType m_backgroundType;

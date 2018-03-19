@@ -12,7 +12,7 @@ int main(int argc, char **argv)
     }
 
     HTMLEngine engine;
-    engine.LoadURL("tests/test10.html" );// argv[1]);
+    engine.LoadURL("tests/test12.html" );// argv[1]);
     engine.Run();
 
     return 0;

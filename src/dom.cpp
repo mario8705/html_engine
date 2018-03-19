@@ -1,54 +1,70 @@
 #include "dom.h"
 #include <map>
+#include <vector>
 #include "parser.h"
 #include "HTMLElement.h"
-#include <vector>
+#include "TextElement.h"
 
 using HTMLTokenIterator = std::vector<HTMLToken>::const_iterator;
 
 void assemble_dom(HTMLElement *parent, HTMLTokenIterator start, HTMLTokenIterator end)
 {
-    HTMLElement *element = nullptr;
+    HTMLElement *element = parent;
     std::vector<HTMLElement *> stack;
 
-    while (start != end)
+    /*element = new HTMLElement("p", parent);
+    element->SetData("Hello, World!");
+    element->SetAttribute("align", "center");
+
+    element = new HTMLElement("div", parent);
+    element = new HTMLElement("p", element);
+    element->SetData("Hello, World inside a div");
+*/
+
+    for (; start != end; ++start)
     {
         const HTMLToken &tok = *start;
 
-        if (tok.type == HT_OpenTag)
+        switch (tok.type)
         {
-            printf("Open tag: %s, stack=%d\n", tok.data, stack.size());
-            element = new HTMLElement(tok.data, stack.empty() ? parent : (*stack.end()));
+            case HT_OpenTag:
+                printf("Open tag: %s\n", tok.data);
+                element = new HTMLElement(tok.data, element);
 
-            stack.push_back(element);
-        }
-        else if (tok.type == HT_CloseTag)
-        {
-            printf("Close tag: %s\n", tok.data);
+                stack.push_back(element);
+                break;
+            
+            case HT_CloseTag:
+                printf("Close tag: %s\n", tok.data);
+                if (!stack.empty())
+                {
+                    stack.pop_back();
 
-            if (!stack.empty())
-            {
-                stack.pop_back();
-                element = *(stack.end());
-            }
-            else
-            {
-                element = nullptr;
-            }
-        }
-        else if (tok.type == HT_Data)
-        {
-            printf("Data: %s\n", tok.data);
-            element->SetData(tok.data);
-        }
-        else if (tok.type == HT_Attribute)
-        {
-            printf("Attribute: %s=%s\n", tok.data, tok.data2);
+                    if (!stack.empty())
+                    {
+                        element = stack.back();
+                    }
+                    else
+                    {
+                        element = parent;
+                    }
+                }
 
-            element->SetAttribute(tok.data, tok.data2);
-        }
+                break;
+            
+            case HT_Attribute:
+                printf("Attr: '%s' : '%s'\n", tok.data, tok.data2);
+                element->SetAttribute(tok.data, tok.data2);
+                break;
+            
+            case HT_Data:
+                printf("Data: %s\n", tok.data);
+                element->AppendChildren(new TextElement(tok.data));
+                break;
 
-        ++start;
+            default:
+                break;
+        }
     }
 }
 
