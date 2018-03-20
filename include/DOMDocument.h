@@ -1,6 +1,6 @@
 #pragma once
 #include <functional>
-#include <unordered_map>
+#include <map>
 
 class HTMLElement;
 
@@ -17,5 +17,5 @@ public:
 
 private:
     HTMLElement *m_rootElement;
-    std::unordered_map<std::string, std::function<HTMLElement*(std::string)>> m_registeredElements;
+    std::map<std::string, std::function<HTMLElement *(std::string)>> m_registeredElements;
 };
