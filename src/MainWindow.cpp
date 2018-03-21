@@ -12,7 +12,7 @@ MainWindow::MainWindow()
 
     SDL_WM_SetCaption("HTML Engine", nullptr);
 
-    m_surf = SDL_SetVideoMode(1280, 720, 32, SDL_HWSURFACE | SDL_DOUBLEBUF);
+    m_surf = SDL_SetVideoMode(1280, 720, 24, SDL_SWSURFACE);
     if (!m_surf)
     {
         throw std::runtime_error(SDL_GetError());
@@ -33,6 +33,17 @@ MainWindow::~MainWindow()
 void MainWindow::SetCaption(const std::string &captionText)
 {
     SDL_WM_SetCaption(captionText.c_str(), nullptr);    
+}
+
+void MainWindow::Lock()
+{
+    SDL_LockSurface(m_surf);
+}
+
+void MainWindow::Unlock()
+{
+    SDL_UnlockSurface(m_surf);
+
 }
 
 void MainWindow::PumpEvents()

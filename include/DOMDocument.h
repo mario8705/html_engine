@@ -1,6 +1,7 @@
 #pragma once
 #include <functional>
 #include <map>
+#include <string>
 
 class HTMLElement;
 
@@ -15,7 +16,12 @@ public:
 
     void LoadDocument(const std::string &path);
 
+    HTMLElement *FindLastOf(const std::string &tagName) const;
+
+    std::string GetTitle() const;
+
 private:
     HTMLElement *m_rootElement;
+    std::string m_title;
     std::map<std::string, std::function<HTMLElement *(std::string)>> m_registeredElements;
 };

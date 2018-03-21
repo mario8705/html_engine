@@ -11,6 +11,9 @@ public:
 
     void SetCaption(const std::string &captionText);
 
+    void Lock();
+    void Unlock();
+
     void PumpEvents();
 
     void Present();

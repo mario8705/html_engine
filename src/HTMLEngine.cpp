@@ -47,9 +47,9 @@ void PaintBackground(cairo_t *cr, const Stylesheet *stylesheet, const LayoutInfo
 {
     Stylesheet::BackgroundType bt = stylesheet->GetBackgroundType();
 
-    if (bt == Stylesheet::BT_SolidColor)
+    // if (bt == Stylesheet::BT_SolidColor)
     {
-        color_cairo_set_source(cr, stylesheet->GetBackgroundColor());
+        color_cairo_set_source(cr, 0x0); // stylesheet->GetBackgroundColor());
         cairo_rectangle(cr, layoutInfo.x, layoutInfo.y, layoutInfo.w, layoutInfo.h);
         cairo_fill(cr);
     }
@@ -58,9 +58,9 @@ void PaintBackground(cairo_t *cr, const Stylesheet *stylesheet, const LayoutInfo
 void RenderElement(cairo_t *cr, ADOMNode *element)
 {
     const LayoutInfo &layoutInfo = m_layoutCache[element];
-    // const Stylesheet *stylesheet = element->GetStylesheet();
+    const Stylesheet *stylesheet = element->GetStylesheet();
 
-    // PaintBackground(cr, stylesheet, layoutInfo);
+    PaintBackground(cr, stylesheet, layoutInfo);
 
     cairo_select_font_face(cr, "Sans", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
     // cairo_set_font_size(cr, stylesheet->GetFontSize());
@@ -122,9 +122,15 @@ void HTMLEngine::LoadURL(const std::string &filename)
 
 void HTMLEngine::Run()
 {
+    m_mainWindow->Lock();
+
     HTMLElement *root = m_document->GetRootElement();
     CalcLayout(root);
     RenderElement(m_mainWindow->GetCairo(), root);
+    
+    m_mainWindow->SetCaption("HTML Engine - " + m_document->GetTitle());
+
+    m_mainWindow->Unlock();
 
     m_mainWindow->Present();
     m_mainWindow->PumpEvents();

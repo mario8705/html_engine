@@ -1,5 +1,6 @@
 #include "HTMLElement.h"
 #include <algorithm>
+#include <sstream>
 #include "Stylesheet.h"
 #include "TextElement.h"
 
@@ -63,6 +64,47 @@ void HTMLElement::AppendChildren(ADOMNode *child)
 vector<ADOMNode *> HTMLElement::GetChildrens() const
 {
     return m_childrens;
+}
+
+std::string HTMLElement::RawData() const
+{
+    std::stringstream ss;
+    TextElement *element;
+
+    for (auto it = m_childrens.begin(); it != m_childrens.end(); ++it)
+    {
+        if ((element = (*it)->AsTextNode()) != nullptr)
+        {
+            ss << element->GetData();
+        }
+    }
+
+    return ss.str();
+}
+
+HTMLElement *HTMLElement::FindLastOf(const std::string &tagName) const
+{
+    HTMLElement *element, *lastOf = nullptr, *tmp;
+
+    for (auto it = m_childrens.begin(); it != m_childrens.end(); ++it)
+    {
+        if ((element = (*it)->AsElementNode()) != nullptr)
+        {
+            if (element->GetTagName() == tagName)
+            {
+                lastOf = element;
+            }
+
+            tmp = element->FindLastOf(tagName);
+
+            if (tmp)
+            {
+                lastOf = tmp;
+            }
+        }
+    }
+
+    return lastOf;
 }
 
 void HTMLElement::DumpTree(int ident) const

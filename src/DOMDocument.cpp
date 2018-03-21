@@ -25,6 +25,7 @@ HTMLElement *DOMDocument::CreateElement(const string &tagName)
 
     return new HTMLElement(tagName);    
 }
+
 #include "dom.h"
 void DOMDocument::LoadDocument(const std::string &path)
 {
@@ -39,4 +40,23 @@ void DOMDocument::LoadDocument(const std::string &path)
     m_rootElement = create_dom(tokens);
 
     m_rootElement->DumpTree();
+
+    printf("Find 'title': %s\n", FindLastOf("title")->AsElementNode()->RawData().c_str());
+}
+
+std::string DOMDocument::GetTitle() const
+{
+    HTMLElement *element = FindLastOf("title");
+
+    if (element)
+    {
+        return element->RawData();
+    }
+
+    return "";
+}
+
+HTMLElement *DOMDocument::FindLastOf(const std::string &tagName) const
+{
+    return m_rootElement->FindLastOf(tagName);
 }

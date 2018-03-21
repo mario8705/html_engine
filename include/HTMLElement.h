@@ -25,7 +25,9 @@ public:
     inline void SetClientWidth(float clientWidth) { m_clientWidth = clientWidth; }
     inline void SetClientHeight(float clientHeight) { m_clientHeight = clientHeight; }
 
-    Stylesheet *GetStylesheet() const { return m_stylesheet; }
+    std::string RawData() const;
+
+    HTMLElement *FindLastOf(const std::string &tagName) const;
 
     void DumpTree(int ident = 1) const;
 
