@@ -7,6 +7,10 @@
 
 #include <map>
 
+#ifndef M_PI
+#define M_PI 3.14159654359
+#endif
+
 struct LayoutInfo
 {
     float x, y;
@@ -14,6 +18,66 @@ struct LayoutInfo
 };
 
 std::map<ADOMNode *, LayoutInfo> m_layoutCache;
+
+void cairo_rounded_rectangle(cairo_t * cr, double x, double y, double width, double height, double radius)
+{
+	double degrees = M_PI / 180.0;
+
+	cairo_new_sub_path(cr);
+	cairo_arc (cr, x + width - radius, y + radius, radius, -90 * degrees, 0 * degrees);
+	cairo_arc (cr, x + width - radius, y + height - radius, radius, 0 * degrees, 90 * degrees);
+	cairo_arc (cr, x + radius, y + height - radius, radius, 90 * degrees, 180 * degrees);
+	cairo_arc (cr, x + radius, y + radius, radius, 180 * degrees, 270 * degrees);
+	cairo_close_path(cr);
+}
+
+void chrome_draw_button(cairo_t * cr, int x, int y, int width, int height, char * title) {
+	cairo_save(cr);
+
+	cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
+	cairo_set_line_join(cr, CAIRO_LINE_JOIN_ROUND);
+
+	cairo_rounded_rectangle(cr, 2 + x, 2 + y, width - 4, height - 4, 2.0);
+	cairo_set_source_rgba(cr, 44.0/255.0, 71.0/255.0, 91.0/255.0, 29.0/255.0);
+	cairo_set_line_width(cr, 4);
+	cairo_stroke(cr);
+
+	cairo_rounded_rectangle(cr, 2 + x, 2 + y, width - 4, height - 4, 2.0);
+	cairo_set_source_rgba(cr, 158.0/255.0, 169.0/255.0, 177.0/255.0, 1.0);
+	cairo_set_line_width(cr, 2);
+	cairo_stroke(cr);
+
+	{
+		cairo_pattern_t * pat = cairo_pattern_create_linear(2 + x, 2 + y, 2 + x, 2 + y + height - 4);
+		cairo_pattern_add_color_stop_rgba(pat, 0, 1, 1, 1, 1);
+		cairo_pattern_add_color_stop_rgba(pat, 1, 241.0/255.0, 241.0/255.0, 244.0/255.0, 1);
+		cairo_rounded_rectangle(cr, 2 + x, 2 + y, width - 4, height - 4, 2.0);
+		cairo_set_source(cr, pat);
+		cairo_fill(cr);
+		cairo_pattern_destroy(pat);
+	}
+
+	{
+		cairo_pattern_t * pat = cairo_pattern_create_linear(3 + x, 3 + y, 3 + x, 3 + y + height - 4);
+		cairo_pattern_add_color_stop_rgba(pat, 0, 252.0/255.0, 252.0/255.0, 254.0/255.0, 1);
+		cairo_pattern_add_color_stop_rgba(pat, 1, 223.0/255.0, 225.0/255.0, 230.0/255.0, 1);
+		cairo_rounded_rectangle(cr, 3 + x, 3 + y, width - 5, height - 5, 2.0);
+		cairo_set_source(cr, pat);
+		cairo_fill(cr);
+		cairo_pattern_destroy(pat);
+	}
+
+	{
+		// draw_string(&fake_context, (width - str_width) / 2 + x, y + (height) / 2 + 4, rgb(49,49,49), title);
+	}
+
+    cairo_restore(cr);
+}
+
+void DrawBrowserChrome(cairo_t *cr)
+{
+    chrome_draw_button(cr, 100, 100, 200, 40, "Hello, World!");
+}
 
 void CalcLayout(HTMLElement *element)
 {
@@ -36,7 +100,6 @@ void CalcLayout(HTMLElement *element)
         childLayoutInfo.x = layoutInfo.x;
         childLayoutInfo.y = layoutInfo.y + yOffset;
         childLayoutInfo.w = layoutInfo.w;
-        /// TODO Move getstylesheet into adomnode
         childLayoutInfo.h = element->GetStylesheet()->GetFontSize();
 
         yOffset += childLayoutInfo.h;
@@ -124,6 +187,7 @@ void HTMLEngine::Run()
 {
     HTMLElement *root = m_document->GetRootElement();
     CalcLayout(root);
+    DrawBrowserChrome(m_mainWindow->GetCairo());
     RenderElement(m_mainWindow->GetCairo(), root);
 
     m_mainWindow->Present();
